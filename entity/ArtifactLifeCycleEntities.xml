@@ -22,8 +22,8 @@ under the License.
 
     <entity entity-name="ArtifactLogType" package="co.hotwax.alc">
         <field name="artifactLogTypeId" type="id" is-pk="true"/>
-        <field name="artifactLogName" type="text-medium"/>
-        <field name="artifactLogDescription" type="text-medium"/>
+        <field name="artifactLogTypeName" type="text-medium"/>
+        <field name="artifactLogTypeDescription" type="text-medium"/>
     </entity>
 
     <entity entity-name="ArtifactLog" package="co.hotwax.alc">
