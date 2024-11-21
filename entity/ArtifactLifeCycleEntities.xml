@@ -29,6 +29,7 @@ under the License.
     <entity entity-name="ArtifactLog" package="co.hotwax.alc">
         <field name="artifactEventId" type="id" is-pk="true"/>
         <field name="artifactLogId" type="id"/>
+        <field name="artifactLogTypeId" type="id"/>
         <field name="artifactLogIdTypeId" type="id"/>
         <field name="artifactLogIdSystem" type="id"/>
         <field name="fromSystem" type="id"/>
@@ -47,4 +48,3 @@ under the License.
         </relationship>
     </entity>
 </entities>
-
