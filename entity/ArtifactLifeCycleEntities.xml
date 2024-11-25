@@ -47,4 +47,18 @@ under the License.
             <key-map field-name="artifactLogTypeId"/>
         </relationship>
     </entity>
+
+    <!-- This is an Index entity for the ArtifactLog in OpenSearch -->
+    <entity entity-name="ArtifactLogIndex" package="co.hotwax.alc" group="artifactLifeCycle">
+        <field name="artifactEventId" type="id" is-pk="true"/>
+        <field name="artifactLogId" type="id"/>
+        <field name="artifactLogTypeId" type="id"/>
+        <field name="artifactLogIdTypeId" type="id"/>
+        <field name="artifactLogIdSystem" type="id"/>
+        <field name="fromSystem" type="id"/>
+        <field name="toSystem" type="id"/>
+        <field name="logOriginPath" type="text-medium"/>
+        <field name="logFilePath" type="text-medium"/>
+        <field name="content" type="text-very-long"/>
+    </entity>
 </entities>
