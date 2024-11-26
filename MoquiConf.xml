@@ -12,4 +12,8 @@
             <inline-other index-prefix="alc-" cluster-name="default"/>
         </datasource>
     </entity-facade>
+
+    <database-list>
+        <dictionary-type type="object" java-type="java.lang.Object" default-sql-type="STRUCT"/>
+    </database-list>
 </moqui-conf>
