@@ -59,6 +59,6 @@ under the License.
         <field name="toSystem" type="id"/>
         <field name="logOriginPath" type="text-medium"/>
         <field name="logFilePath" type="text-medium"/>
-        <field name="content" type="text-very-long"/>
+        <field name="content" type="object"/>
     </entity>
 </entities>
