@@ -1,3 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="create" noun="ArtifactLogIndex">
+        <in-parameters>
+            <parameter name="artifactEventId" required="true"/>
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLog"/>
+            <if condition="artifactLog == null"><return error="true" message="Artifact log with artifactEventId: ${artifactEventId} is not found"/></if>
+
+            <set field="mountPoint" value="runtime://${System.getProperty('alc_sftp_mount_point')}"/>
+            <set field="contentType" from="ec.resource.getContentType(artifactLog.logFilePath)"/>
+            <set field="contentStream" from="ec.resource.getLocationReference(mountPoint+artifactLog.logFilePath).openStream()"/>
+
+            <script><![CDATA[
+                import org.moqui.impl.context.ContextJavaUtil
+                import com.fasterxml.jackson.databind.JsonNode
+                import org.apache.commons.csv.*
+                contentObject = null
+
+                if (contentType == "application/json") {
+                    JsonNode contentRootNode = ContextJavaUtil.jacksonMapper.readTree(contentStream)
+                    if (contentRootNode.isArray()) {
+                        contentObject = contentRootNode.asList()
+                    }
+                    if (contentRootNode.isObject()) {
+                        contentObject = contentRootNode.asType(Object.class)
+                    }
+                } else if (contentType == "text/csv") {
+                    CSVParser csvParser = CSVFormat.DEFAULT.builder().setEscape((char)'\\').build().parse(new InputStreamReader(contentStream))
+                    Map<String, Integer> headerMap = [:]
+                    contentObject = []
+
+                    Iterator<CSVRecord> iterator = csvParser.iterator()
+                    CSVRecord headerRecord = iterator.next()
+                    for (int i = 0; i < headerRecord.size(); i++) headerMap.put(headerRecord.get(i), i)
+
+                    while (iterator.hasNext()) {
+                        CSVRecord record = iterator.next()
+                        valueMap = [:]
+
+                        for (Map.Entry<String, Integer> field in headerMap) {
+                            fieldValue = record.get(field.value)
+                            if (fieldValue == null) continue
+                            valueMap.put(field.key, fieldValue.isEmpty() ? null : fieldValue)
+                        }
+                        contentObject.add(valueMap)
+                    }
+                } else {
+                    ec.message.addError("FileType is not Supported")
+                    return
+                }
+
+                indexMap = [
+                    artifactEventId: artifactLog.artifactEventId,
+                    artifactLogId: artifactLog.artifactLogId,
+                    artifactLogTypeId: artifactLog.artifactLogTypeId,
+                    artifactLogIdTypeId: artifactLog.artifactLogIdTypeId,
+                    artifactLogIdSystem: artifactLog.artifactLogIdSystem,
+                    fromSystem: artifactLog.fromSystem,
+                    toSystem: artifactLog.toSystem,
+                    logOriginPath: artifactLog.logOriginPath,
+                    logFilePath: artifactLog.logFilePath,
+                    content: contentObject
+                ]
+                ]]>
+            </script>
+
+            <entity-make-value entity-name="co.hotwax.alc.ArtifactLogIndex" value-field="artifactLogIndex" map="indexMap"/>
+            <entity-create value-field="artifactLogIndex"/>
+        </actions>
+    </service>
 </services>
