@@ -2,15 +2,19 @@
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
     <service verb="create" noun="ArtifactLogIndex">
         <in-parameters>
-            <parameter name="artifactEventId" required="true"/>
+            <parameter name="artifactEventId"/>
+            <parameter name="artifactLogValue" type="Map"/>
         </in-parameters>
         <actions>
-            <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLog"/>
-            <if condition="artifactLog == null"><return error="true" message="Artifact log with artifactEventId: ${artifactEventId} is not found"/></if>
+            <if condition="artifactEventId != null &amp;&amp; !artifactEventId.isEmpty()">
+                <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLogValue"/>
+            </if>
+
+            <if condition="artifactLogValue == null"><return error="true" message="Artifact Log is not found"/></if>
 
             <set field="mountPoint" value="runtime://${System.getProperty('alc_sftp_mount_point')}"/>
-            <set field="contentType" from="ec.resource.getContentType(artifactLog.logFilePath)"/>
-            <set field="contentStream" from="ec.resource.getLocationReference(mountPoint+artifactLog.logFilePath).openStream()"/>
+            <set field="contentType" from="ec.resource.getContentType(artifactLogValue.logFilePath)"/>
+            <set field="contentStream" from="ec.resource.getLocationReference(mountPoint+artifactLogValue.logFilePath).openStream()"/>
 
             <script><![CDATA[
                 import org.moqui.impl.context.ContextJavaUtil
@@ -52,15 +56,15 @@
                 }
 
                 indexMap = [
-                    artifactEventId: artifactLog.artifactEventId,
-                    artifactLogId: artifactLog.artifactLogId,
-                    artifactLogTypeId: artifactLog.artifactLogTypeId,
-                    artifactLogIdTypeId: artifactLog.artifactLogIdTypeId,
-                    artifactLogIdSystem: artifactLog.artifactLogIdSystem,
-                    fromSystem: artifactLog.fromSystem,
-                    toSystem: artifactLog.toSystem,
-                    logOriginPath: artifactLog.logOriginPath,
-                    logFilePath: artifactLog.logFilePath,
+                    artifactEventId: artifactLogValue.artifactEventId,
+                    artifactLogId: artifactLogValue.artifactLogId,
+                    artifactLogTypeId: artifactLogValue.artifactLogTypeId,
+                    artifactLogIdTypeId: artifactLogValue.artifactLogIdTypeId,
+                    artifactLogIdSystem: artifactLogValue.artifactLogIdSystem,
+                    fromSystem: artifactLogValue.fromSystem,
+                    toSystem: artifactLogValue.toSystem,
+                    logOriginPath: artifactLogValue.logOriginPath,
+                    logFilePath: artifactLogValue.logFilePath,
                     content: contentObject
                 ]
                 ]]>
