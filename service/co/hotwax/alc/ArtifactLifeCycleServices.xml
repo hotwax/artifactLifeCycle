@@ -1,5 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="consume" noun="AllArtifactLogs">
+        <in-parameters>
+            <parameter name="sinceDate" type="Timestamp"/>
+            <parameter name="jobName"/>
+        </in-parameters>
+        <actions>
+            <if condition="!jobName &amp;&amp; !sinceDate">
+                <return error="true" message="Either jobName or sinceDate input parameters are required"/>
+            </if>
+
+            <if condition="!sinceDate">
+                <entity-find-one entity-name="moqui.service.job.ServiceJobParameter" value-field="lastRunParam">
+                    <field-map field-name="parameterName" value="lastRunTime"/>
+                </entity-find-one>
+                <set field="sinceDate" from="lastRunParam?.parameterValue"/>
+            </if>
+
+            <entity-find entity-name="co.hotwax.alc.ArtifactLog" list="artifactLogList">
+                <econdition field-name="lastUpdatedStamp" from="sinceDate" operator="greater" ignore-if-empty="true"/>
+            </entity-find>
+            <set field="nowDate" from="ec.user.nowTimestamp"/>
+
+            <iterate list="artifactLogList" entry="artifactLogValue">
+                <log message="================= ${artifactLogValue}"/>
+                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactLogValue:artifactLogValue]"/>
+            </iterate>
+
+            <if condition="jobName != null &amp;&amp; !jobName.isEmpty()">
+                <entity-make-value entity-name="moqui.service.job.ServiceJobParameter" value-field="updateLastRunParam" map="lastRunParam"/>
+                <set field="updateLastRunParam.parameterValue" from="nowDate"/>
+                <entity-update value-field="updateLastRunParam"/>
+            </if>
+
+            <return message="All Artifact Logs are indexed that are updated after Datetime: ${sinceDate}"/>
+            <!--            <log message="sinceDate:${sinceDate}\njobName:${jobName}\n\nlist:${artifactLogList}"/>-->
+        </actions>
+    </service>
+
     <service verb="create" noun="ArtifactLogIndex">
         <in-parameters>
             <parameter name="artifactEventId"/>
