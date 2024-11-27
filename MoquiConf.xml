@@ -6,4 +6,14 @@
     <default-property name="elasticsearch_user" value=""/>
     <default-property name="elasticsearch_password" value="" is-secret="true"/>
 
+    <entity-facade database-locale="${default_locale}" database-time-zone="${database_time_zone ?: default_time_zone}">
+        <datasource group-name="artifactLifeCycle" runtime-add-missing="true" startup-add-missing="false"
+                    object-factory="org.moqui.impl.entity.elastic.ElasticDatasourceFactory">
+            <inline-other index-prefix="alc-" cluster-name="default"/>
+        </datasource>
+    </entity-facade>
+
+    <database-list>
+        <dictionary-type type="object" java-type="java.lang.Object" default-sql-type="STRUCT"/>
+    </database-list>
 </moqui-conf>
