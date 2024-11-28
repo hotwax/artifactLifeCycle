@@ -49,7 +49,7 @@
         </actions>
     </service>
     <service verb="create" noun="ArtifactLogIndex">
-        <description>This service processes the provided artifact log and creates an index on opensearch.</description>
+        <description>This service processes the provided Artifact Log and creates an index on OpenSearch.</description>
         <in-parameters>
             <parameter name="artifactEventId"/>
             <parameter name="artifactLogValue" type="Map"/>
