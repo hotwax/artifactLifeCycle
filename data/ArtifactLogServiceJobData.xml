@@ -2,13 +2,13 @@
 
 <entity-facade-xml type="ext">
     <moqui.service.job.ServiceJob
-            jobName="consume_AllArtifactLogs"
+            jobName="create_ArtifactLogIndexes"
             description="consume all of the newly created Artifact Logs"
-            serviceName="co.hotwax.alc.ArtifactLifeCycleServices.consume#AllArtifactLogs"
+            serviceName="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndexes"
             cronExpression="0 0/15 * * * ?"
             paused="Y"
     >
         <parameters parameterName="lastRunTime" parameterValue=""/>
-        <parameters parameterName="jobName" parameterValue="consume_AllArtifactLogs"/>
+        <parameters parameterName="jobName" parameterValue="create_ArtifactLogIndexes"/>
     </moqui.service.job.ServiceJob>
 </entity-facade-xml>
