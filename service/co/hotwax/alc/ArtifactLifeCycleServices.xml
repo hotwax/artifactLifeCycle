@@ -62,10 +62,8 @@
 
             <if condition="artifactLogValue == null"><return error="true" message="Artifact Log is not found"/></if>
 
-            <set field="mountPoint" value="runtime://${System.getProperty('alc_sftp_mount_point')}"/>
             <set field="contentType" from="ec.resource.getContentType(artifactLogValue.logFilePath)"/>
-            <set field="contentStream" from="ec.resource.getLocationReference(mountPoint+artifactLogValue.logFilePath).openStream()"/>
-
+            <set field="contentStream" from="ec.resource.getLocationReference(artifactLogValue.logFilePath).openStream()"/>
             <!-- Process the content based on its content type (JSON or CSV) -->
             <script><![CDATA[
                 import org.moqui.impl.context.ContextJavaUtil
