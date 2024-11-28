@@ -19,6 +19,7 @@
             <!-- Get the last run time of the job if sinceDate is not provided -->
             <if condition="!sinceDate">
                 <entity-find-one entity-name="moqui.service.job.ServiceJobParameter" value-field="lastRunParam">
+                    <field-map field-name="jobName"/>
                     <field-map field-name="parameterName" value="lastRunTime"/>
                 </entity-find-one>
                 <set field="sinceDate" from="lastRunParam?.parameterValue"/>
@@ -30,18 +31,21 @@
             </entity-find>
 
             <!-- Iterate through the list of artifact logs and process each one -->
+            <set field="createIndexCount" value="0" type="Integer"/>
             <iterate list="artifactLogList" entry="artifactLogValue">
                 <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactLogValue:artifactLogValue]"/>
+                <set field="createIndexCount" from="createIndexCount + 1"/>
             </iterate>
 
             <!-- Update the last run time of the job -->
-            <if condition="!jobName">
-                <entity-make-value entity-name="moqui.service.job.ServiceJobParameter" value-field="updateLastRunParam" map="lastRunParam"/>
-                <set field="updateLastRunParam.parameterValue" from="nowDate"/>
-                <entity-update value-field="updateLastRunParam"/>
+            <if condition="jobName">
+                <service-call
+                    name="update#moqui.service.job.ServiceJobParameter"
+                    in-map="[jobName:jobName, parameterName:'lastRunTime', parameterValue:nowDate]"
+                />
             </if>
 
-            <return message="All Artifact Logs are indexed that are updated after Datetime: ${sinceDate}"/>
+            <return message="Total ${createIndexCount} Artifact Logs are indexed that are updated after Datetime: ${sinceDate}"/>
         </actions>
     </service>
     <service verb="create" noun="ArtifactLogIndex">
