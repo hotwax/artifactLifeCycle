@@ -28,12 +28,13 @@
 
             <entity-find entity-name="co.hotwax.alc.ArtifactLog" list="artifactLogList">
                 <econdition field-name="lastUpdatedStamp" from="sinceDate" operator="greater" ignore-if-empty="true"/>
+                <select-field field-name="artifactEventId"/>
             </entity-find>
 
             <!-- Iterate through the list of artifact logs and process each one -->
             <set field="createIndexCount" value="0" type="Integer"/>
             <iterate list="artifactLogList" entry="artifactLogValue">
-                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactLogValue:artifactLogValue]"/>
+                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactEventId:artifactLogValue.artifactEventId]"/>
                 <set field="createIndexCount" from="createIndexCount + 1"/>
             </iterate>
 
@@ -51,19 +52,16 @@
     <service verb="create" noun="ArtifactLogIndex">
         <description>This service processes the provided Artifact Log and creates an index on OpenSearch.</description>
         <in-parameters>
-            <parameter name="artifactEventId"/>
-            <parameter name="artifactLogValue" type="Map"/>
+            <parameter name="artifactEventId" required="true"/>
         </in-parameters>
         <actions>
-            <!-- If artifactEventId is provided, find the corresponding artifact log value -->
-            <if condition="artifactEventId">
-                <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLogValue"/>
-            </if>
-
+            <!-- Find the corresponding artifact log value -->
+            <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLogValue"/>
             <if condition="artifactLogValue == null"><return error="true" message="Artifact Log is not found"/></if>
 
             <set field="contentType" from="ec.resource.getContentType(artifactLogValue.logFilePath)"/>
             <set field="contentStream" from="ec.resource.getLocationReference(artifactLogValue.logFilePath).openStream()"/>
+
             <!-- Process the content based on its content type (JSON or CSV) -->
             <script><![CDATA[
                 import org.moqui.impl.context.ContextJavaUtil
