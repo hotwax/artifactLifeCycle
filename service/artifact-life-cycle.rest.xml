@@ -6,9 +6,16 @@
           name="artifact-life-cycle" displayName="Artifact Life Cycle REST API" version="1.0.0"
           description="Services and entity operations for Artifact Life Cycle">
 
+<!--    <resource name="artifactLogs" require-authentication="anonymous-all">-->
+<!--        <method type="post">-->
+<!--            <entity name="co.hotwax.alc.ArtifactLog" operation="create"/>-->
+<!--        </method>-->
+<!--    </resource>-->
+
     <resource name="artifactLogs" require-authentication="anonymous-all">
+        <!-- POST /artifact-life-cycle/rest/s1/artifactLogs-->
         <method type="post">
-            <entity name="co.hotwax.alc.ArtifactLog" operation="create"/>
+            <service name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLog"/>
         </method>
     </resource>
 
