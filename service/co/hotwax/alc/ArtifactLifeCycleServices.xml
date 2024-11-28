@@ -100,7 +100,7 @@
                         contentObject.add(valueMap)
                     }
                 } else {
-                    ec.message.addError("File Format ${contentType} is not Supported")
+                    ec.message.addError("${contentType} file format is not supported. Please upload a JSON or CSV")
                     return
                 }
 
