@@ -123,4 +123,51 @@
             <entity-create value-field="artifactLogIndex"/>
         </actions>
     </service>
+
+    <service verb="create" noun="ArtifactLog">
+        <in-parameters>
+            <parameter name="uploadedFile" type="org.apache.commons.fileupload.FileItem" required="true"/>
+            <parameter name="artifactLogId"/>
+            <parameter name="artifactLogTypeId"/>
+            <parameter name="artifactLogIdTypeId"/>
+            <parameter name="artifactLogIdSystem"/>
+            <parameter name="fromSystem"/>
+            <parameter name="toSystem"/>
+            <parameter name="logOriginPath"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="filePath"/>
+            <parameter name="artifactEventId"/>
+        </out-parameters>
+        <actions>
+            <set field="result" from="[:]"/>
+            <set field="fileName" from="uploadedFile.getName()"/>
+            <set field="dateTime" from="ec.l10n.format((ec.user.nowTimestamp), 'yyyy-MM-dd-HH-mm-ss-SSS')"/>
+
+            <set field="fileFormat" from="fileName.substring(fileName.lastIndexOf('.') + 1)"/>
+            <set field="fileName" from="fileName.substring(0, fileName.lastIndexOf('.'))"/>
+
+            <if condition="!'csv'.equals(fileFormat) &amp;&amp; !'json'.equals(fileFormat)">
+                <return message=".${fileFormat} file format is not supported. Please upload a CSV or JSON file."/>
+            </if>
+
+            <set field="filePath" type="String" value="runtime://ArtifactLogs/${fileName}_${dateTime}.${fileFormat}"/>
+            <set field="fileReference" from="ec.resource.getLocationReference(filePath)"/>
+
+            <script><![CDATA[
+                fileStream = uploadedFile.getInputStream()
+                try {
+                    fileReference.putStream(fileStream)
+                } finally {
+                    fileStream.close()
+                }
+            ]]></script>
+
+            <service-call name="create#co.hotwax.alc.ArtifactLog"
+                          in-map="[artifactLogId:artifactLogId, artifactLogTypeId:artifactLogTypeId, artifactLogIdTypeId:artifactLogIdTypeId, artifactLogIdSystem:artifactLogIdSystem, fromSystem:fromSystem, toSystem:toSystem, logOriginPath:logOriginPath, logFilePath:filePath]"
+                          out-map="result"/>
+            <set field="artifactEventId" from="result.artifactEventId"/>
+            <return message="Artifact Log with artifactEventId: ${artifactEventId} has been created."/>
+        </actions>
+    </service>
 </services>
