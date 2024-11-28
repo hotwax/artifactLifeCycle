@@ -46,7 +46,7 @@
                 />
             </if>
 
-            <return message="Total ${createIndexCount} Artifact Logs are indexed that are updated after Datetime: ${sinceDate}"/>
+            <return message="${createIndexCount} Artifact Logs were indexed from ${sinceDate}"/>
         </actions>
     </service>
     <service verb="create" noun="ArtifactLogIndex">
