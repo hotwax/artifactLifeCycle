@@ -4,8 +4,8 @@ sed -i -e 's/name="elasticsearch_url" value=""/name="elasticsearch_url" value="'
 sed -i -e 's/name="elasticsearch_user" value=""/name="elasticsearch_user" value="'$ELASTICSEARCH_USER'"/g' $CONF_FILE
 sed -i -e 's/name="elasticsearch_password" value=""/name="elasticsearch_password" value="'$ELASTICSEARCH_PASSWORD'"/g' $CONF_FILE
 
-sed -i -e 's/name="entity_ds_host" value="127.0.0.1"/name="entity_ds_host" value="'$Moqui_DB_HOST'"/g' $CONF_FILE
-sed -i -e 's/name="webapp_http_host" value=""/name="webapp_http_host" value="'$Moqui_HOST'"/g' $CONF_FILE
+sed -i 's/name="entity_ds_host" value="127.0.0.1"/name="entity_ds_host" value="'$Moqui_DB_HOST'"/g' $CONF_FILE
+sed -i 's/name="webapp_http_host" value=""/name="webapp_http_host" value="'$Moqui_HOST'"/g' $CONF_FILE
 
 sed -i 's/name="entity_ds_user" value="moqui"/name="entity_ds_user" value="'$Moqui_DB_USER'"/g' $CONF_FILE
 sed -i 's/name="entity_ds_password" value="moqui"/name="entity_ds_password" value="'$Moqui_DB_PASSWORD'"/g' $CONF_FILE
