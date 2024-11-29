@@ -20,6 +20,8 @@ RUN git clone --depth 1 -b "main" https://github.com/hotwax/artifactLifeCycle.gi
 WORKDIR /moqui-framework
 
 RUN echo "org.gradle.daemon=false" | tee -a gradle.properties
+RUN cp runtime/component/artifactLifeCycle/docker/MoquiProductionConf.xml runtime/conf/
+RUN cp runtime/component/artifactLifeCycle/docker/mysql-connector-j-8.0.33.jar runtime/lib
 RUN git apply runtime/component/artifactLifeCycle/patches/ElasticDatasourceFactory.patch
 
 RUN ./gradlew addRuntime
