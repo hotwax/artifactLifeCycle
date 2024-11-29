@@ -5,7 +5,6 @@
     <default-property name="elasticsearch_url" value=""/>
     <default-property name="elasticsearch_user" value=""/>
     <default-property name="elasticsearch_password" value="" is-secret="true"/>
-    <default-property name="alc_sftp_mount_point" value="ArtifactLog"/>
 
     <entity-facade database-locale="${default_locale}" database-time-zone="${database_time_zone ?: default_time_zone}">
         <datasource group-name="artifactLifeCycle" runtime-add-missing="true" startup-add-missing="false"

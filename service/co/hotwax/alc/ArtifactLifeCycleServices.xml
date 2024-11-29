@@ -33,8 +33,8 @@
 
             <!-- Iterate through the list of artifact logs and process each one -->
             <set field="createIndexCount" value="0" type="Integer"/>
-            <iterate list="artifactLogList" entry="artifactLogValue">
-                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactEventId:artifactLogValue.artifactEventId]"/>
+            <iterate list="artifactLogList" entry="artifactEvent">
+                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactEventId:artifactEvent.artifactEventId]"/>
                 <set field="createIndexCount" from="createIndexCount + 1"/>
             </iterate>
 
@@ -46,7 +46,7 @@
                 />
             </if>
 
-            <return message="Total ${createIndexCount} Artifact Logs are indexed that are updated after Datetime: ${sinceDate}"/>
+            <return message="${createIndexCount} Artifact Logs were indexed from ${sinceDate}"/>
         </actions>
     </service>
     <service verb="create" noun="ArtifactLogIndex">
@@ -56,11 +56,11 @@
         </in-parameters>
         <actions>
             <!-- Find the corresponding artifact log value -->
-            <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLogValue"/>
-            <if condition="artifactLogValue == null"><return error="true" message="Artifact Log is not found"/></if>
+            <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLog"/>
+            <if condition="artifactLog == null"><return error="true" message="Artifact Log is not found"/></if>
 
-            <set field="contentType" from="ec.resource.getContentType(artifactLogValue.logFilePath)"/>
-            <set field="contentStream" from="ec.resource.getLocationReference(artifactLogValue.logFilePath).openStream()"/>
+            <set field="contentType" from="ec.resource.getContentType(artifactLog.logFilePath)"/>
+            <set field="contentStream" from="ec.resource.getLocationReference(artifactLog.logFilePath).openStream()"/>
 
             <!-- Process the content based on its content type (JSON or CSV) -->
             <script><![CDATA[
@@ -104,15 +104,15 @@
 
                 // Prepare the index map for creating an ArtifactLogIndex record
                 indexMap = [
-                    artifactEventId: artifactLogValue.artifactEventId,
-                    artifactLogId: artifactLogValue.artifactLogId,
-                    artifactLogTypeId: artifactLogValue.artifactLogTypeId,
-                    artifactLogIdTypeId: artifactLogValue.artifactLogIdTypeId,
-                    artifactLogIdSystem: artifactLogValue.artifactLogIdSystem,
-                    fromSystem: artifactLogValue.fromSystem,
-                    toSystem: artifactLogValue.toSystem,
-                    logOriginPath: artifactLogValue.logOriginPath,
-                    logFilePath: artifactLogValue.logFilePath,
+                    artifactEventId: artifactLog.artifactEventId,
+                    artifactLogId: artifactLog.artifactLogId,
+                    artifactLogTypeId: artifactLog.artifactLogTypeId,
+                    artifactLogIdTypeId: artifactLog.artifactLogIdTypeId,
+                    artifactLogIdSystem: artifactLog.artifactLogIdSystem,
+                    fromSystem: artifactLog.fromSystem,
+                    toSystem: artifactLog.toSystem,
+                    logOriginPath: artifactLog.logOriginPath,
+                    logFilePath: artifactLog.logFilePath,
                     content: contentObject
                 ]
                 ]]>
