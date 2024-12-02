@@ -4,7 +4,7 @@
         <description>This service indexes each artifact log by calling the core service. It only process logs after the 'sinceDate', If not specified, it defaults to the last run time of the job.</description>
         <in-parameters>
             <parameter name="sinceDate" type="Timestamp">
-                <description>The timestamp to filter artifact logs updated after this date</description>
+                <description>Filter Artifact Logs updated after this date time</description>
             </parameter>
             <parameter name="jobName">
                 <description>jobName to get the last run time. If provided, the service will update the job's last run time.</description>
