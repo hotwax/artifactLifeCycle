@@ -13,7 +13,7 @@ RUN git clone --depth 1 -b "main" https://github.com/hotwax/moqui-framework.git 
 WORKDIR /moqui-framework
 RUN git clone --depth 1 -b "main" https://github.com/hotwax/moqui-runtime.git runtime
 WORKDIR /moqui-framework/runtime/component
-RUN git clone --depth 1 -b "docker-config" https://github.com/hotwax/artifactLifeCycle.git
+RUN git clone --depth 1 -b "develop" https://github.com/hotwax/artifactLifeCycle.git
 
 WORKDIR /moqui-framework
 
