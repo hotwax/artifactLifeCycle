@@ -1,3 +1,126 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="create" noun="ArtifactLogIndexes">
+        <description>This service indexes each artifact log by calling the core service. It only process logs after the 'sinceDate', If not specified, it defaults to the last run time of the job.</description>
+        <in-parameters>
+            <parameter name="sinceDate" type="Timestamp">
+                <description>Filter Artifact Logs updated after this date time</description>
+            </parameter>
+            <parameter name="jobName">
+                <description>jobName to get the last run time. If provided, the service will update the job's last run time.</description>
+            </parameter>
+        </in-parameters>
+        <actions>
+            <!-- Validate if either 'jobName' or 'sinceDate' is provided -->
+            <if condition="!jobName &amp;&amp; !sinceDate">
+                <return error="true" message="Either jobName or sinceDate input parameters are required"/>
+            </if>
+
+            <!-- Get the last run time of the job if sinceDate is not provided -->
+            <if condition="!sinceDate">
+                <entity-find-one entity-name="moqui.service.job.ServiceJobParameter" value-field="lastRunParam">
+                    <field-map field-name="jobName"/>
+                    <field-map field-name="parameterName" value="lastRunTime"/>
+                </entity-find-one>
+                <set field="sinceDate" from="lastRunParam?.parameterValue"/>
+            </if>
+            <set field="nowDate" from="ec.user.nowTimestamp"/>
+
+            <entity-find entity-name="co.hotwax.alc.ArtifactLog" list="artifactLogList">
+                <econdition field-name="lastUpdatedStamp" from="sinceDate" operator="greater" ignore-if-empty="true"/>
+                <select-field field-name="artifactEventId"/>
+            </entity-find>
+
+            <!-- Iterate through the list of artifact logs and process each one -->
+            <set field="createIndexCount" value="0" type="Integer"/>
+            <iterate list="artifactLogList" entry="artifactEvent">
+                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactEventId:artifactEvent.artifactEventId]"/>
+                <set field="createIndexCount" from="createIndexCount + 1"/>
+            </iterate>
+
+            <!-- Update the last run time of the job -->
+            <if condition="jobName">
+                <service-call
+                    name="update#moqui.service.job.ServiceJobParameter"
+                    in-map="[jobName:jobName, parameterName:'lastRunTime', parameterValue:nowDate]"
+                />
+            </if>
+
+            <return message="${createIndexCount} Artifact Logs were indexed from ${sinceDate}"/>
+        </actions>
+    </service>
+    <service verb="create" noun="ArtifactLogIndex">
+        <description>This service processes the provided Artifact Log and creates an index on OpenSearch.</description>
+        <in-parameters>
+            <parameter name="artifactEventId" required="true"/>
+        </in-parameters>
+        <actions>
+            <!-- Find the corresponding artifact log value -->
+            <entity-find-one entity-name="co.hotwax.alc.ArtifactLog" value-field="artifactLog"/>
+            <if condition="artifactLog == null"><return error="true" message="Artifact Log is not found"/></if>
+
+            <set field="contentType" from="ec.resource.getContentType(artifactLog.logFilePath)"/>
+            <set field="contentStream" from="ec.resource.getLocationReference(artifactLog.logFilePath).openStream()"/>
+
+            <!-- Process the content based on its content type (JSON or CSV) -->
+            <script><![CDATA[
+                import org.moqui.impl.context.ContextJavaUtil
+                import com.fasterxml.jackson.databind.JsonNode
+                import org.apache.commons.csv.*
+                contentObject = null
+
+                if (contentType == "application/json") {
+                    JsonNode contentRootNode = ContextJavaUtil.jacksonMapper.readTree(contentStream)
+                    if (contentRootNode.isArray()) {
+                        contentObject = contentRootNode.asList()
+                    }
+                    if (contentRootNode.isObject()) {
+                        contentObject = contentRootNode.asType(Object.class)
+                    }
+                } else if (contentType == "text/csv") {
+                    CSVParser csvParser = CSVFormat.DEFAULT.builder().setEscape((char)'\\').build().parse(new InputStreamReader(contentStream))
+                    Map<String, Integer> headerMap = [:]
+                    contentObject = []
+
+                    Iterator<CSVRecord> iterator = csvParser.iterator()
+                    CSVRecord headerRecord = iterator.next()
+                    for (int i = 0; i < headerRecord.size(); i++) headerMap.put(headerRecord.get(i), i)
+
+                    while (iterator.hasNext()) {
+                        CSVRecord record = iterator.next()
+                        valueMap = [:]
+
+                        for (Map.Entry<String, Integer> field in headerMap) {
+                            fieldValue = record.get(field.value)
+                            if (fieldValue == null) continue
+                            valueMap.put(field.key, fieldValue.isEmpty() ? null : fieldValue)
+                        }
+                        contentObject.add(valueMap)
+                    }
+                } else {
+                    ec.message.addError("${contentType} file format is not supported. Please upload a JSON or CSV")
+                    return
+                }
+
+                // Prepare the index map for creating an ArtifactLogIndex record
+                indexMap = [
+                    artifactEventId: artifactLog.artifactEventId,
+                    artifactLogId: artifactLog.artifactLogId,
+                    artifactLogTypeId: artifactLog.artifactLogTypeId,
+                    artifactLogIdTypeId: artifactLog.artifactLogIdTypeId,
+                    artifactLogIdSystem: artifactLog.artifactLogIdSystem,
+                    fromSystem: artifactLog.fromSystem,
+                    toSystem: artifactLog.toSystem,
+                    logOriginPath: artifactLog.logOriginPath,
+                    logFilePath: artifactLog.logFilePath,
+                    content: contentObject
+                ]
+                ]]>
+            </script>
+
+            <!-- Create a new ArtifactLogIndex Record -->
+            <entity-make-value entity-name="co.hotwax.alc.ArtifactLogIndex" value-field="artifactLogIndex" map="indexMap"/>
+            <entity-create value-field="artifactLogIndex"/>
+        </actions>
+    </service>
 </services>

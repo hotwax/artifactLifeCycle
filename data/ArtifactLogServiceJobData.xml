@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-facade-xml type="ext">
+    <moqui.service.job.ServiceJob
+            jobName="create_ArtifactLogIndexes"
+            description="Index recently updated Artifact Logs"
+            serviceName="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndexes"
+            cronExpression="0 0/15 * * * ?"
+            paused="Y"
+    >
+        <parameters parameterName="lastRunTime" parameterValue=""/>
+        <parameters parameterName="jobName" parameterValue="create_ArtifactLogIndexes"/>
+    </moqui.service.job.ServiceJob>
+</entity-facade-xml>
