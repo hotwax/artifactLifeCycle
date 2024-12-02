@@ -3,7 +3,7 @@
 <entity-facade-xml type="ext">
     <moqui.service.job.ServiceJob
             jobName="create_ArtifactLogIndexes"
-            description="consume all of the newly created Artifact Logs"
+            description="Index recently updated Artifact Logs"
             serviceName="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndexes"
             cronExpression="0 0/15 * * * ?"
             paused="Y"
