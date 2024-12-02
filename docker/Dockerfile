@@ -2,9 +2,7 @@ FROM ubuntu:18.04
 LABEL maintainer="HotWax Commerce <sysadmin@hotwaxsystems.com>"
 
 # Install necessary packages in a single RUN command to reduce image layers
-RUN apt-get update && \
-    apt-get -y install openjdk-11-jdk ca-certificates-java git vim screen bash && \
-    apt-get clean
+RUN apt-get update && apt-get -y install openjdk-11-jdk ca-certificates-java git vim screen bash && apt-get clean
 
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH $JAVA_HOME/bin:$PATH
@@ -25,10 +23,9 @@ RUN cp runtime/component/artifactLifeCycle/docker/mysql-connector-j-8.0.33.jar r
 RUN git apply runtime/component/artifactLifeCycle/patches/ElasticDatasourceFactory.patch
 
 RUN ./gradlew addRuntime
-RUN mkdir -p /moqui-deploy && \
-    cd /moqui-deploy && \
-    jar -xvf /moqui-framework/moqui-plus-runtime.war
+RUN mkdir -p /moqui-deploy && cd /moqui-deploy && jar -xvf /moqui-framework/moqui-plus-runtime.war
 
+ENV DB_LOAD="./gradlew loadProduction -Ptypes=seed,seed-initial,install,ext-seed,ext -Praw"
 ENV JAVA_OPTS="-Xms512m -Xmx4096m"
 ENV CONF_FILE="/moqui-framework/runtime/conf/MoquiProductionConf.xml"
 ENV SLEEP="sleep 2"
@@ -45,7 +42,6 @@ ENV ELASTICSEARCH_PASSWORD=""
 
 ENV TIME_ZONE=""
 ENV Moqui_configuration_DB_Name=""
-ENV SCHEDULED_JOB_CHECK_TIME="60"
 
 WORKDIR /moqui-deploy
 COPY docker/entrypoint.sh .

@@ -23,10 +23,9 @@
     <default-property name="entity_ds_database_configuration" value="moqui_configuration"/>
 
     <!-- Elasticsearch Configuration -->
-    <default-property name="elasticsearch_url" value=""/>
+    <default-property name="elasticsearch_url" value="https://127.0.0.1:9200"/>
     <default-property name="elasticsearch_user" value=""/>
     <default-property name="elasticsearch_password" value="" is-secret="true"/>
-    <default-property name="elasticsearch_index_prefix" value=""/>
 
     <!-- Property for setting timezone - configurable as part of Dockerfile  -->
     <default-property name="default_time_zone" value=""/>
@@ -41,7 +40,7 @@
     <server-stats stats-skip-condition="pathInfo?.startsWith('/rpc') || pathInfo?.startsWith('/rest') || pathInfo?.startsWith('/status')"/>
 
     <!-- NOTE: using the environment variable is relatively secure in a container environment, but for more security set it here instead -->
-    <entity-facade crypt-pass="${entity_ds_crypt_pass}" query-stats="true" >
+    <entity-facade crypt-pass="${entity_ds_crypt_pass}" query-stats="true">
         <datasource group-name="transactional" database-conf-name="${entity_ds_db_conf}">
             <inline-jdbc pool-maxsize="140" xa-ds-class="com.mysql.cj.jdbc.MysqlXADataSource">
                 <xa-properties pinGlobalTxToPhysicalConnection="true" autoReconnectForPools="true" useSSL="false" allowPublicKeyRetrieval="true"
