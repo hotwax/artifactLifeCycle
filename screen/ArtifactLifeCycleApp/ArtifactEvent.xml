@@ -16,8 +16,8 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
 >
-    <subscreens default-item="ViewArtifactEvent">
-        <!-- <subscreens-item name="ViewArtifactEvent"/> -->
+    <subscreens default-item="FindArtifactEvent">
+         <subscreens-item name="ViewArtifactEvent" location="component://artifactLifeCycle/screen/ArtifactLifeCycleApp/ArtifactEvent/ViewArtifactEvent.xml"/>
     </subscreens>
 
     <!-- <subscreens default-item="FindArtifactEvent"></subscreens> -->
