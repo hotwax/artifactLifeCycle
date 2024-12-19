@@ -18,7 +18,8 @@ along with this software (see the LICENSE.md file). If not, see
             Search for ArtifactLogIndex
         </description>
         <in-parameters>
-            <parameter name="queryString"/>
+            <parameter name="queryString" required="true"/>
+            <parameter name="additionalQueryMap" type="Map"/>
             <parameter name="pageSize" type="Integer" default="20"/>
             <parameter name="pageIndex" type="Integer" default="0"/>
             <parameter name="pageNoLimit" type="Boolean" default="false"/>
@@ -38,6 +39,8 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="queryString" from="queryString ? elasticQueryAutoWildcard(queryString, true) : '*'"/>
             <if condition="queryString"><set field="queryString" from="'(' + queryString + ')'"/></if>
 
+            <set field="artifactEventId" from="ec.web.parameters.get('artifactEventId')"/>
+
             <set field="fromOffset" from="pageNoLimit ? 0 : pageIndex * pageSize"/>
             <!-- TODO FUTURE: for this type of search ES limits size to 10k (default for index.max_result_window, can be changed per index), must use a scroll search to do more -->
             <set field="sizeLimit" from="pageNoLimit ? 10000 : pageSize"/>
@@ -54,13 +57,35 @@ along with this software (see the LICENSE.md file). If not, see
 
                 def searchMap = [
                     query: [
-                        query_string: [
-                            query: queryString
+                        bool: [
+                            should: [
+                                [
+                                    query_string: [
+                                        query: queryString
+                                    ]
+                                ]
+                            ]
                         ]
                     ],
-                    from: fromOffset,
-                    size: sizeLimit
+                    from : fromOffset,
+                    size : sizeLimit,
+                    sort : ["_score"]
                 ]
+
+                if (artifactEventId) {
+                    searchMap.query.bool.must_not = [[match: [artifactEventId: artifactEventId]]]
+                }
+
+                if (additionalQueryMap) {
+                    searchMap.query.bool.should.add(additionalQueryMap)
+                }
+
+                Map validateRespMap = elasticClient.validateQuery(index, searchMap.query, true)
+                if (validateRespMap != null) {
+                    ec.message.addMessage("Invalid search: ${queryString}", "danger")
+                    documentListCount = 0
+                    return
+                }
 
                 Map resultMap = elasticClient.search(indexName, searchMap)
                 Map hitsMap = (Map) resultMap.hits
@@ -74,14 +99,12 @@ along with this software (see the LICENSE.md file). If not, see
                     documentList.add(document)
                 }
 
-                ec.logger.info("=============Results: ${documentList}\n\n")
-
                 documentListCount = hitsMap.total.value
 
                 // calculate the pagination values
                 documentListPageIndex = pageIndex
                 documentListPageSize = pageSize
-                documentListPageMaxIndex = ((BigDecimal) documentListCount - 1).divide(documentListPageSize, 0, BigDecimal.ROUND_DOWN) as int
+                documentListPageMaxIndex = ((BigDecimal) documentListCount - 1).divide(documentListPageSize, 0, java.math.RoundingMode.DOWN) as int
                 documentListPageRangeLow = documentListPageIndex * documentListPageSize + 1
                 documentListPageRangeHigh = (documentListPageIndex * documentListPageSize) + documentListPageSize
                 if (documentListPageRangeHigh > documentListCount) documentListPageRangeHigh = documentListCount
