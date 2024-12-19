@@ -67,9 +67,20 @@ along with this software (see the LICENSE.md file). If not, see
                                     <link url="viewArtifact" text="${artifactEventId}"/>
                                 </default-field>
                             </field>
-                            <field name="artifactLogId"><default-field>
-                                <display/>
-                            </default-field></field>
+                            <field name="artifactLogId"><default-field><display/></default-field></field>
+                            <field name="artifactLogTypeId"><default-field><display/></default-field></field>
+                            <field name="fromSystem"><default-field><display/></default-field></field>
+                            <field name="toSystem"><default-field><display/></default-field></field>
+                            <field name="logOriginPath"><default-field><display/></default-field></field>
+                            <field name="content">
+                                <default-field>
+                                    <container-dialog id="contentDialog" button-text="View Content">
+                                        <form-single name="ContentForm">
+                                            <field name="content"><default-field title=""><display style="border-none"/></default-field></field>
+                                        </form-single>
+                                    </container-dialog>
+                                </default-field>
+                            </field>
                         </form-list>
                     </box-body>
                 </container-box>
