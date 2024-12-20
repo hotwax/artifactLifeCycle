@@ -14,22 +14,19 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
     <service verb="search" noun="ArtifactLogIndexes">
-        <description>Search for ArtifactLogIndex</description>
+        <description>
+            Search for ArtifactLogIndex
+        </description>
         <in-parameters>
-            <parameter name="queryString" required="true"><description>The query string used for the full search on document</description></parameter>
+            <parameter name="queryString" required="true"/>
             <parameter name="additionalQueryMap" type="Map"/>
-            <parameter name="pageSize" type="Integer" default="20"><description>Number of results to return</description></parameter>
-            <parameter name="pageIndex" type="Integer" default="0"><description>The page index for pagination</description></parameter>
+            <parameter name="pageSize" type="Integer" default="20"/>
+            <parameter name="pageIndex" type="Integer" default="0"/>
             <parameter name="pageNoLimit" type="Boolean" default="false"/>
             <parameter name="orderByFields" type="List"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="documentList" type="List">
-                <description>A list of documents returned by the search</description>
-                <parameter name="document" type="Map"/>
-            </parameter>
-
-            <!-- Parameteres used in pagination -->
+            <parameter name="documentList" type="List"><parameter name="document" type="Map"/></parameter>
             <parameter name="documentListCount" type="Integer">
                 <description>The total count of hits, not just the limited number returned.</description></parameter>
             <parameter name="documentListPageIndex" type="Integer"/>
@@ -39,7 +36,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="documentListPageRangeHigh" type="Integer"/>
         </out-parameters>
         <actions>
-            <!-- process the query string and prepare it for Search and wrap in a paranthesis -->
             <set field="queryString" from="queryString ? elasticQueryAutoWildcard(queryString, true) : '*'"/>
             <if condition="queryString"><set field="queryString" from="'(' + queryString + ')'"/></if>
 
@@ -49,19 +45,16 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- TODO FUTURE: for this type of search ES limits size to 10k (default for index.max_result_window, can be changed per index), must use a scroll search to do more -->
             <set field="sizeLimit" from="pageNoLimit ? 10000 : pageSize"/>
             <script><![CDATA[
-                // Retrieve ElasticSearch Artifact log indexName and client
                 ed = ec.entity.getEntityDefinition("co.hotwax.alc.ArtifactLogIndex")
                 edf = ed.entityInfo.datasourceFactory
                 indexName = edf.getIndexName(ed)
                 def elasticClient = ec.factory.elastic.getClient(edf.clusterName)
 
-                //
                 if(elasticClient == null) {
                     ec.logger.info("No Elastic Client found for cluster name ${edf.clusterName}, not indexing documents")
                     return
                 }
 
-                // Prepare the Elasticsearch query with various conditions
                 def searchMap = [
                     query: [
                         bool: [
@@ -79,7 +72,6 @@ along with this software (see the LICENSE.md file). If not, see
                     sort : ["_score"]
                 ]
 
-                // If artifactEventId is provided, exclude matching records from the search results
                 if (artifactEventId) {
                     searchMap.query.bool.must_not = [[match: [artifactEventId: artifactEventId]]]
                 }
@@ -88,7 +80,6 @@ along with this software (see the LICENSE.md file). If not, see
                     searchMap.query.bool.should.add(additionalQueryMap)
                 }
 
-                // Validate the query to ensure it's syntactically correct
                 Map validateRespMap = elasticClient.validateQuery(index, searchMap.query, true)
                 if (validateRespMap != null) {
                     ec.message.addMessage("Invalid search: ${queryString}", "danger")
@@ -102,7 +93,6 @@ along with this software (see the LICENSE.md file). If not, see
                 List<Map> hitsList = (List<Map>) hitsMap.hits
                 documentList = []
 
-                // Add each document's source to the documentList, along with the document ID
                 for (Map hit in hitsList) {
                     Map document = (Map) hit._source
                     document._id = hit._id
@@ -111,7 +101,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 documentListCount = hitsMap.total.value
 
-                // Calculate pagination values based on total document count
+                // calculate the pagination values
                 documentListPageIndex = pageIndex
                 documentListPageSize = pageSize
                 documentListPageMaxIndex = ((BigDecimal) documentListCount - 1).divide(documentListPageSize, 0, java.math.RoundingMode.DOWN) as int
