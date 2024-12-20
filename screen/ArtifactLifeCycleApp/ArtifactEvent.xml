@@ -23,7 +23,6 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- <subscreens default-item="FindArtifactEvent"></subscreens> -->
 
     <widgets>
-        <label text="Main Artifact Event Page" type="h2"/>
         <subscreens-panel id="artifact-event"/>
     </widgets>
 </screen>

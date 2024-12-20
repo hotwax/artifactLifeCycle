@@ -20,7 +20,6 @@ along with this software (see the LICENSE.md file). If not, see
 >
     <subscreens default-item="ArtifactEvent"/>
     <widgets>
-        <label text="Artifact Application" type="h1" />
         <subscreens-panel id="artifact-app"/>
     </widgets>
 </screen>
