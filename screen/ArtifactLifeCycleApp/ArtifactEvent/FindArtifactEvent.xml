@@ -19,10 +19,8 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response url="../ViewArtifactEvent"/>
     </transition>
     <actions>
-        <set field="artifactEventId" value="100408"/>
-<!--        <if condition="!anyField"><set field="anyField" value="*"/></if>-->
         <set field="queryString" from="anyField ?: '*' "/>
-        <service-call name="co.hotwax.alc.SearchService.search#ArtifactLogIndexes" in-map="[queryString:queryString, pageIndex:pageIndex, pageSize:pageSize, pageNoLimit:pageNoLimit]" out-map="context"/>
+        <service-call name="co.hotwax.alc.SearchServices.search#ArtifactLogIndexes" in-map="[queryString:queryString, pageIndex:pageIndex, pageSize:pageSize, pageNoLimit:pageNoLimit]" out-map="context"/>
     </actions>
     <widgets>
         <label text="Find Artifact Event Page" type="h3"/>
@@ -57,10 +55,6 @@ along with this software (see the LICENSE.md file). If not, see
                     </container-dialog>
                 </default-field>
             </field>
-
         </form-list>
-        <field name="artifactEventId">
-            <link url="viewArtifactEvent" text="View" link-type="anchor-button"/>
-        </field>
     </widgets>
 </screen>
