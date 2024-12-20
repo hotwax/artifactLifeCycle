@@ -23,7 +23,7 @@
     <default-property name="entity_ds_database_configuration" value="moqui_configuration"/>
 
     <!-- Elasticsearch Configuration -->
-    <default-property name="elasticsearch_url" value="https://127.0.0.1:9200"/>
+    <default-property name="elasticsearch_url" value=""/>
     <default-property name="elasticsearch_user" value=""/>
     <default-property name="elasticsearch_password" value="" is-secret="true"/>
 
