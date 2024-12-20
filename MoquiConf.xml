@@ -6,6 +6,12 @@
     <default-property name="elasticsearch_user" value=""/>
     <default-property name="elasticsearch_password" value="" is-secret="true"/>
 
+    <screen-facade>
+        <screen location="component://webroot/screen/webroot/apps.xml">
+            <subscreens-item name="artifactLifeCycle" menu-title="Artifact Life Cycle" menu-index="1" location="component://artifactLifeCycle/screen/ArtifactLifeCycleApp.xml"/>
+        </screen>
+    </screen-facade>
+
     <entity-facade database-locale="${default_locale}" database-time-zone="${database_time_zone ?: default_time_zone}">
         <datasource group-name="artifactLifeCycle" runtime-add-missing="true" startup-add-missing="false"
                     object-factory="org.moqui.impl.entity.elastic.ElasticDatasourceFactory">

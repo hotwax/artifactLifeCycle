@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="search" noun="ArtifactLogIndexes">
+        <description>
+            Search for ArtifactLogIndex
+        </description>
+        <in-parameters>
+            <parameter name="queryString" required="true"/>
+            <parameter name="additionalQueryMap" type="Map"/>
+            <parameter name="pageSize" type="Integer" default="20"/>
+            <parameter name="pageIndex" type="Integer" default="0"/>
+            <parameter name="pageNoLimit" type="Boolean" default="false"/>
+            <parameter name="orderByFields" type="List"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="documentList" type="List"><parameter name="document" type="Map"/></parameter>
+            <parameter name="documentListCount" type="Integer">
+                <description>The total count of hits, not just the limited number returned.</description></parameter>
+            <parameter name="documentListPageIndex" type="Integer"/>
+            <parameter name="documentListPageSize" type="Integer"/>
+            <parameter name="documentListPageMaxIndex" type="Integer"/>
+            <parameter name="documentListPageRangeLow" type="Integer"/>
+            <parameter name="documentListPageRangeHigh" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <set field="queryString" from="queryString ? elasticQueryAutoWildcard(queryString, true) : '*'"/>
+            <if condition="queryString"><set field="queryString" from="'(' + queryString + ')'"/></if>
+
+            <set field="artifactEventId" from="ec.web.parameters.get('artifactEventId')"/>
+
+            <set field="fromOffset" from="pageNoLimit ? 0 : pageIndex * pageSize"/>
+            <!-- TODO FUTURE: for this type of search ES limits size to 10k (default for index.max_result_window, can be changed per index), must use a scroll search to do more -->
+            <set field="sizeLimit" from="pageNoLimit ? 10000 : pageSize"/>
+            <script><![CDATA[
+                ed = ec.entity.getEntityDefinition("co.hotwax.alc.ArtifactLogIndex")
+                edf = ed.entityInfo.datasourceFactory
+                indexName = edf.getIndexName(ed)
+                def elasticClient = ec.factory.elastic.getClient(edf.clusterName)
+
+                if(elasticClient == null) {
+                    ec.logger.info("No Elastic Client found for cluster name ${edf.clusterName}, not indexing documents")
+                    return
+                }
+
+                def searchMap = [
+                    query: [
+                        bool: [
+                            should: [
+                                [
+                                    query_string: [
+                                        query: queryString
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    from : fromOffset,
+                    size : sizeLimit,
+                    sort : ["_score"]
+                ]
+
+                if (artifactEventId) {
+                    searchMap.query.bool.must_not = [[match: [artifactEventId: artifactEventId]]]
+                }
+
+                if (additionalQueryMap) {
+                    searchMap.query.bool.should.add(additionalQueryMap)
+                }
+
+                Map validateRespMap = elasticClient.validateQuery(index, searchMap.query, true)
+                if (validateRespMap != null) {
+                    ec.message.addMessage("Invalid search: ${queryString}", "danger")
+                    documentListCount = 0
+                    return
+                }
+
+                Map resultMap = elasticClient.search(indexName, searchMap)
+                Map hitsMap = (Map) resultMap.hits
+
+                List<Map> hitsList = (List<Map>) hitsMap.hits
+                documentList = []
+
+                for (Map hit in hitsList) {
+                    Map document = (Map) hit._source
+                    document._id = hit._id
+                    documentList.add(document)
+                }
+
+                documentListCount = hitsMap.total.value
+
+                // calculate the pagination values
+                documentListPageIndex = pageIndex
+                documentListPageSize = pageSize
+                documentListPageMaxIndex = ((BigDecimal) documentListCount - 1).divide(documentListPageSize, 0, java.math.RoundingMode.DOWN) as int
+                documentListPageRangeLow = documentListPageIndex * documentListPageSize + 1
+                documentListPageRangeHigh = (documentListPageIndex * documentListPageSize) + documentListPageSize
+                if (documentListPageRangeHigh > documentListCount) documentListPageRangeHigh = documentListCount
+
+            ]]></script>
+        </actions>
+    </service>
+</services>
