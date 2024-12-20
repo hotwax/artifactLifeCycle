@@ -28,7 +28,7 @@ along with this software (see the LICENSE.md file). If not, see
             <return message="Artifact Log ${artifactEventId} is not found"/>
         </if>
         <set field="artifactLogId" from="artifactLogIndex.artifactLogId"/>
-        <service-call name="co.hotwax.alc.SearchService.search#ArtifactLogIndexes" out-map="context" in-map="[queryString:artifactLogId,pageIndex:pageIndex, pageSize:pageSize, pageNoLimit:pageNoLimit]"/>
+        <service-call name="co.hotwax.alc.SearchService.search#ArtifactLogIndexes" out-map="context" in-map="[queryString:artifactLogId, additionalQueryMap:[match:[artifactLogId:artifactLogId]],pageIndex:pageIndex, pageSize:pageSize, pageNoLimit:pageNoLimit]"/>
     </actions>
     <widgets>
         <label text="View Artifact Event Page" type="h3"/>
