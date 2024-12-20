@@ -1,6 +1,6 @@
 #!/bin/bash
 #Database Settings
-sed -i  's/127.0.0.1:9200/'$ELASTICSEARCH_HOST':9200/g' $CONF_FILE
+sed -i 's|name="elasticsearch_url" value=""|name="elasticsearch_url" value="'$ELASTICSEARCH_HOST'"|g' $CONF_FILE
 sed -i 's/name="elasticsearch_user" value=""/name="elasticsearch_user" value="'${ELASTICSEARCH_USER}'"/g' $CONF_FILE
 sed -i 's/name="elasticsearch_password" value=""/name="elasticsearch_password" value="'${ELASTICSEARCH_PASSWORD}'"/g' $CONF_FILE
 
