@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-facade-xml type="ext-seed">
+    <artifactGroups artifactGroupId="ALC_APP" description="Artifact Life Cycle app">
+        <artifacts artifactName="component://artifactLifeCycle/screen/ArtifactLifeCycleApp.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <!-- Full permissions for the ADMIN user group -->
+        <authz artifactAuthzId="ALC_APP_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALWAYS" authzActionEnumId="AUTHZA_ALL"/>
+    </artifactGroups>
+</entity-facade-xml>
+
