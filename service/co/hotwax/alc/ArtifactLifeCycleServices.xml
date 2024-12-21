@@ -62,6 +62,10 @@
             <set field="contentType" from="ec.resource.getContentType(artifactLog.logFilePath)"/>
             <set field="contentStream" from="ec.resource.getLocationReference(artifactLog.logFilePath).openStream()"/>
 
+            <if condition="!contentStream">
+                <return error="true" message="Artifact Log file is not found"/>
+            </if>
+            
             <!-- Process the content based on its content type (JSON or CSV) -->
             <script><![CDATA[
                 import org.moqui.impl.context.ContextJavaUtil
