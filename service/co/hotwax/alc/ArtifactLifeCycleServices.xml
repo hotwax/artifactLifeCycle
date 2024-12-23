@@ -6,7 +6,7 @@
             <parameter name="sinceDate" type="Timestamp">
                 <description>Filter Artifact Logs updated after this date time</description>
             </parameter>
-            <parameter name="jobName">
+            <parameter name="jobName" type="String">
                 <description>jobName to get the last run time. If provided, the service will update the job's last run time.</description>
             </parameter>
         </in-parameters>
@@ -34,7 +34,7 @@
             <!-- Iterate through the list of artifact logs and process each one -->
             <set field="createIndexCount" value="0" type="Integer"/>
             <iterate list="artifactLogList" entry="artifactEvent">
-                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactEventId:artifactEvent.artifactEventId]"/>
+                <service-call name="co.hotwax.alc.ArtifactLifeCycleServices.create#ArtifactLogIndex" in-map="[artifactEventId:artifactEvent.artifactEventId]" ignore-error="true" transaction="force-new"/>
                 <set field="createIndexCount" from="createIndexCount + 1"/>
             </iterate>
 
@@ -61,6 +61,10 @@
 
             <set field="contentType" from="ec.resource.getContentType(artifactLog.logFilePath)"/>
             <set field="contentStream" from="ec.resource.getLocationReference(artifactLog.logFilePath).openStream()"/>
+
+            <if condition="!contentStream">
+                <return error="true" message="The specified log file '${artifactLog.logFilePath}' could not be found."/>
+            </if>
 
             <!-- Process the content based on its content type (JSON or CSV) -->
             <script><![CDATA[
